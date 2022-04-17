@@ -5,38 +5,34 @@ const sentiment = require("sentiment");
 const app = express();
 const port = process.env.PORT || 3001;
 
-var sent = new sentiment();
-var inputText = "empty";
+// Init. the sentiment analysis obj.
+const sent = new sentiment();
 
-// Routes.
+// Make css and other files available to the html.
 app.use(express.static(__dirname + '/public'));
+// Allows us to grab data from the dom.
 app.use(bodyparser.urlencoded({ extended: true }));
+// Allows us to render server-side data from the html.
 app.set('view engine', 'ejs');
+
+// Load the main index.html page.
 app.get('/', function(request, response){
     response.sendFile(__dirname + '/views/index.html');
-
-    // Set up callback for the analyze button.
-    //const btnAnalyze = document.querySelector("#btnAnalyze");
-    //const inputURL = document.querySelector("#basic-url");
-    //btnAnalyze.onclick = () => {
-    //  //const name = prompt('What is your name?');
-    //  //alert(`Hello ${name}, nice to see you!`);
-    //  //headingA.textContent = `Welcome ${name}`;
-    //  const textInput = inputUrl.textContent;
-    //  console.log("text: " + textInput);
-    //}
 });
-app.post('/results', (req, res) => {
-    //res.sendFile(__dirname + '/views/results.html');
-    //var example = "Example text is very stupid.";
-    //var result = sent.analyze(example);
-    //console.log("ex: " + example);
-    //console.log(result);
 
+// Post method to handle analysis and results display.
+app.post('/results', (req, res) => {
+    // Grab text from the input field.
     var sentText = req.body.urlname;
+
+    // Analyze it.
     var result = sent.analyze(sentText);
+
+    // Store results.
     var score = result.score;
     var comparative = result.comparative;
+
+    // Render the results page, passing in the data.
     res.render('results',
       {
         sentText: sentText,
@@ -44,4 +40,6 @@ app.post('/results', (req, res) => {
         comparative: comparative
       });
 });
+
+// Start the app server.
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));
