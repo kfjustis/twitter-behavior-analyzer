@@ -52,13 +52,16 @@
       </div>
     </header>
   
-    <main class="px-3">
-      <h1>Enter some text:</h1>
+    <main id="content-box" class="px-3">
+      <h1>Enter a Twitter Profile URL</h1>
+      <div id="load-spinner" class="d-none spinner-border text-light" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
       <form action="/results" method="POST">
-        <input type="text" autocomplete="off" class="form-control text-white bg-dark" id="basic-url" aria-describedby="basic-addon3" name="urlname">
+        <input type="text" autocomplete="off" class="form-control text-white bg-dark" id="basic-url" aria-describedby="basic-addon3" name="urlname" placeholder="https://twitter.com/EdwardTufte">
         <p class="lead">
           <!--<a href="/results" id="btnAnalyze" class="btn btn-lg btn-secondary fw-bold   border-white text-white bg-dark">Analyze</a>-->
-          <button type="submit" class="form-control text-white bg-dark" id="basic-url" aria-describedby="basic-addon3" name="submitname">Analyze</button>
+          <button type="submit" class="form-control text-white bg-dark" id="basic-url" aria-describedby="basic-addon3" name="submitname" onclick="handleAnalyzeClick()">Analyze</button>
         </p>
       </form>
     </main>
@@ -68,6 +71,12 @@
     </footer>
   </div>
 
-
+  <script>
+    // Display the loading spinner when the Analyze button is clicked.
+    function handleAnalyzeClick() {
+      var loader = document.getElementById("load-spinner");
+      loader.classList.remove("d-none");
+    }
+  </script>
   </body>
 </html>
