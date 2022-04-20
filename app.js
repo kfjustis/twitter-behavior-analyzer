@@ -26,19 +26,20 @@ app.get('/', function(request, response){
 app.post('/results', async function (req, res) {
   try {
     // Grab text from the input field.
-    var profileURL = req.body.urlname;
-    var username;
+    let profileURL = req.body.urlname;
+    let error = false;
+    let username;
 
     // Validate the URL format here.
-    if (util.isValidProfileURL(profileURL))
-    {
+    if (util.isValidProfileURL(profileURL)) {
       // Get the username from the profile url.
       username = util.convertURLtoProfileName(profileURL);
 
-      // Retrieve last 100 tweets from the user.
-      var tweets = await twitter.getUserTweets(username);
+      // Retrieve last 100 tweets from the user. This can be 0.
+      let tweets = await twitter.getUserTweets(username);
 
-      // Uncomment when testing locally to see all results in console.
+      // Uncomment when testing locally to see all tweet results in console.
+      // Keep commented out when committing since this will spam the server logs.
       //util.consoleLogTweets(tweets, username);
 
       /* Tweet data layout example.
@@ -58,8 +59,7 @@ app.post('/results', async function (req, res) {
       // Calculate the score for found tweets.
       let totalScore = 0;
       let totalComparative = 0;
-      for (let i = 0; i < tweets.length; ++i)
-      {
+      for (let i = 0; i < tweets.length; ++i) {
         let tweet = tweets[i];
         let currentRes = sent.analyze(tweet.text);
 
@@ -74,14 +74,21 @@ app.post('/results', async function (req, res) {
         // Update lowest score so far.
       }
 
-      // Save the final score value.
-      score = totalScore;
-      // TODO Not sure about this value.
-      comparative = 0;
-    }
-    else
-    {
+      if (tweets.length > 0) {
+        // Save the score and comparative average.
+        score = totalScore;
+        comparative = totalComparative / tweets.length;
+      } else {
+        username = "No tweets found for " + username;
+        error = true;
+      }
+    } else {
       username = "Invalid Twitter URL";
+      error = true;
+    }
+
+    if (error)
+    {
       score = 0;
       comparative = 0;
     }

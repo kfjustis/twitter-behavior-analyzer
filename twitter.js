@@ -13,13 +13,23 @@ const bearerToken = process.env.BEARER_TOKEN;
 // Retrieve 100 tweets for the current usernameStr
 // and return them in an array.
 exports.getUserTweets = async (usernameStr) => {
-    const userId = await getUserId(usernameStr);
-    const timelineURL = `https://api.twitter.com/2/users/${userId}/tweets`;
+    let userTweets = [];  // Tweets will be stored here.
+    let userId;           // Unique value for each Twitter account.
 
-    // Tweets will be stored here.
-    let userTweets = [];
+    // This fails when the given profile does not exist.
+    try {
+        userId = await getUserId(usernameStr);
+    } catch (e) {
+        userId = -1;
+    }
 
-    // we request the author_id expansion so that we can print out the user name later
+    if (userId == -1)
+    {
+        // Return empty array on error.
+        return userTweets;
+    }
+
+    // We request the author_id expansion in case we want to print out the userId later.
     let params = {
         "max_results": 100,
         "tweet.fields": "created_at",
@@ -36,11 +46,16 @@ exports.getUserTweets = async (usernameStr) => {
     let hasNextPage = true;
     let nextToken = null;
     let userName;
+    const timelineURL = `https://api.twitter.com/2/users/${userId}/tweets`;
 
     while (hasNextPage) {
         let resp = await getPage(params, options, nextToken, timelineURL);
         if (resp && resp.meta && resp.meta.result_count && resp.meta.result_count > 0) {
-            userName = resp.includes.users[0].username;
+            if (resp.includes.users) {
+                userName = resp.includes.users[0].username;
+            } else {
+                userName = "Invalid username";
+            }
             if (resp.data && userTweets.length < 100) {
                 userTweets.push.apply(userTweets, resp.data);
             }
@@ -81,7 +96,7 @@ const getUserId = async (usernameStr) => {
     });
 
     // Handle the response.
-    if (res.body) {
+    if (res.body && res.body.data) {
         // Uncomment to see more metadata.
         // console.log(res.body);
         return res.body.data[0].id;
