@@ -33,6 +33,90 @@
 
     <!-- Custom styles for this template -->
     <link href="/css/cover.css" rel="stylesheet" type="text/css">
+
+    <!-- d3 stuff -->
+    <!-- source: https://d3-graph-gallery.com/graph/wordcloud_basic.html-->
+    <!-- source: https://medium.com/dailyjs/building-a-real-time-word-cloud-from-twitch-tv-chat-with-node-js-and-redis-9470895c444a-->
+    <!-- Load d3.js -->
+    <script src="https://d3js.org/d3.v4.js"></script>
+    <!-- Load d3-cloud -->
+    <script src="https://cdn.jsdelivr.net/gh/holtzy/D3-graph-gallery@master/LIB/d3.layout.cloud.js"></script>
+    <script>
+      async function renderCloudVis(visId) {
+        let width = 600;
+        let height = 400;
+        let svg = d3.select(visId).append("svg")
+                    .attr("width", width)
+                    .attr("height", height);
+
+        // Get words based on vis element id.
+        let wordlist = [];
+        if (visId == "#positiveCloudVis") {
+          wordlist = await getPositiveWordList();
+        } else if (visId == "#negativeCloudVis") {
+          wordlist = await getNegativeWordList();
+        } else {
+          // Set "none" for the error case.
+          wordlist = ["none"];
+        }
+
+        let layout = d3.layout.cloud()
+          .size([width, height])
+          .words(wordlist.map(function(d) { return {text: d}; }))
+          .padding(15)
+          .fontSize(25)
+          .on("end", draw);
+
+        layout.start();
+
+        function draw (words) {
+          svg.append("g")
+            .attr("transform", "translate(" + layout.size()[0] / 2 + "," + layout.size()[1] / 2 + ")")
+            .selectAll("text")
+              .data(words)
+            .enter().append("text")
+              .style("font-size", function(d) { return d.size + "px"; })
+              .style("fill", "#1DA1F2")
+              .attr("text-anchor", "middle")
+              .attr("transform", function(d) {
+                d.rotate = 0;
+                return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+              })
+              .text(function(d) { return d.text; });
+        }
+      }
+
+      // Retrieves the positive word list for the user. The words are
+      // converted back into an array so they are easier for d3 to use.
+      async function getPositiveWordList() {
+        let words = await fetch('/api/positiveUserWords')
+          .then(function(res) {
+            return res.text();
+          }).then(function(data) {
+            return data;
+          });
+        return words.split(" ");
+      }
+
+      // Retrieves the negative word list for the user. The words are
+      // converted back into an array so they are easier for d3 to use.
+      async function getNegativeWordList() {
+        let words = await fetch('/api/negativeUserWords')
+          .then(function(res) {
+            return res.text();
+          }).then(function(data) {
+            return data;
+          });
+        return words.split(" ");
+      }
+
+      // Trigger vis rendering once all data is available.
+      window.onload = async function() {
+          renderCloudVis("#positiveCloudVis");
+          renderCloudVis("#negativeCloudVis");
+      };
+    </script>
+
   </head>
 
   <body class="d-flex h-100 text-center text-white bg-dark">
@@ -63,6 +147,14 @@
         <h3>Retweets: <%= numRetweets %></h3>
         <hr>
         <h3><%= elapsedTimeMsg %></h3>
+        <hr>
+        <h3>Most positive words</h3>
+        <div id="positiveCloudVis">
+        </div>
+        <hr>
+        <h3>Most negative words</h3>
+        <div id="negativeCloudVis">
+        </div>
       </main>
 
       <!-- Footer -->

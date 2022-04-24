@@ -23,6 +23,18 @@ app.get('/', function(request, response){
     response.sendFile(__dirname + '/views/index.html');
 });
 
+app.get('/api/positiveUserWords', async function (req, res) {
+    let wordString = await client.getPositiveWordsAsString();
+    res.set('Content-Type', 'text/plain');
+    res.send(wordString);
+});
+
+app.get('/api/negativeUserWords', async function (req, res) {
+    let wordString = await client.getNegativeWordsAsString();
+    res.set('Content-Type', 'text/plain');
+    res.send(wordString);
+});
+
 // Post method to handle analysis and results display.
 app.post('/results', async function (req, res) {
   try {
@@ -71,13 +83,18 @@ app.post('/results', async function (req, res) {
       let maxScoreIdx = -1;
       let tempComparative = 0;
       let oldestTweet = null;
+      let positiveArr = [];
+      let negativeArr = [];
       for (let i = 0; i < tweets.length; ++i) {
         let tweet = tweets[i];
 
-        // Sentiment analysis
+        // Sentiment analysis.
         let currentRes = sent.analyze(tweet.text);
         score += currentRes.score;                 // Total score is just a sum.
         tempComparative += currentRes.comparative; // Comparative is avg. score for the tweet.
+
+        positiveArr = positiveArr.concat(currentRes.positive);
+        negativeArr = negativeArr.concat(currentRes.negative);
 
         // Min/max scores.
         if (currentRes.score < minScore)
@@ -97,6 +114,12 @@ app.post('/results', async function (req, res) {
           numRetweets += 1;
         }
       }
+
+      // Make sure the word arrays are unique sets.
+      let positiveWords = [...new Set(positiveArr)];
+      let negativeWords = [...new Set(negativeArr)];
+      client.setPositiveWords(positiveWords);
+      client.setNegativeWords(negativeWords);
 
       // Set calcs / final data if tweets were found. Otherwise, set error messages.
       if (tweets.length > 0) {

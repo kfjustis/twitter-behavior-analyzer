@@ -1,5 +1,26 @@
 // Functions made available to EJS.
 
-exports.testPrint = function () {
-   return "DEBUG: executed by server";
+let positiveWords = "none";
+let negativeWords = "none";
+
+exports.getPositiveWordsAsString = async () => {
+   return positiveWords;
+}
+
+exports.getNegativeWordsAsString = async () => {
+   return negativeWords;
+}
+
+// Takes an array of words and stores them as a space separated string.
+// This format is easier to send via res.send().
+exports.setPositiveWords = function(arr) {
+   let tempStr = arr.toString();
+   positiveWords = tempStr.replaceAll(",", " ");
+}
+
+// Takes an array of words and stores them as a space separated string.
+// This format is easier to send via res.send().
+exports.setNegativeWords = function(arr) {
+   let tempStr = arr.toString();
+   negativeWords = tempStr.replaceAll(",", " ");
 }
