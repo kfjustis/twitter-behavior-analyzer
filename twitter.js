@@ -48,22 +48,36 @@ exports.getUserTweets = async (usernameStr) => {
     let userName;
     const timelineURL = `https://api.twitter.com/2/users/${userId}/tweets`;
 
+    let hitTweetcap = false;
     while (hasNextPage) {
         let resp = await getPage(params, options, nextToken, timelineURL);
+        // Only process if data was received.
         if (resp && resp.meta && resp.meta.result_count && resp.meta.result_count > 0) {
+            // Make sure the data is relevant to the requested username.
             if (resp.includes.users) {
                 userName = resp.includes.users[0].username;
             } else {
                 userName = "Invalid username";
             }
-            if (resp.data && userTweets.length < 100) {
-                userTweets.push.apply(userTweets, resp.data);
+            // Make sure the entries are valid.
+            if (resp.data) {
+                for (i = 0; i < resp.data.length && !hitTweetcap; ++i)
+                {
+                    if (userTweets.length < 100)
+                    {
+                        userTweets.push(resp.data[i]);
+                    }
+                    else
+                    {
+                        hitTweetcap = true;
+                    }
+                }
             }
             else
             {
                 hasNextPage = false;
             }
-            if (resp.meta.next_token) {
+            if (resp.meta.next_token && !hitTweetcap) {
                 nextToken = resp.meta.next_token;
             } else {
                 hasNextPage = false;
