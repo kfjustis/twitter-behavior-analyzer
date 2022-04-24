@@ -4,6 +4,7 @@ const bodyparser = require("body-parser");
 const sentiment = require("sentiment");
 const twitter = require("./twitter.js");
 const util = require("./util.js");
+const client = require("./client.js");
 const app = express();
 const port = process.env.PORT || 3001;
 
@@ -29,6 +30,13 @@ app.post('/results', async function (req, res) {
     let profileURL = req.body.urlname;
     let error = false;
     let username;
+    let score = 0;
+    let comparative = 0;
+    let bestTweet = "";
+    let worstTweet = "";
+    let numOrganicTweets = 0;
+    let numRetweets = 0;
+    let elapsedTimeMsg = "No elapsed time.";
 
     // Validate the URL format here.
     if (util.isValidProfileURL(profileURL)) {
@@ -56,28 +64,56 @@ app.post('/results', async function (req, res) {
       //  author_id: '22258315'
       //},...*/
 
-      // Calculate the score for found tweets.
-      let totalScore = 0;
-      let totalComparative = 0;
+      // Process the found tweets.
+      let minScore = 99;
+      let maxScore = -99;
+      let minScoreIdx = -1;
+      let maxScoreIdx = -1;
+      let tempComparative = 0;
+      let oldestTweet = null;
       for (let i = 0; i < tweets.length; ++i) {
         let tweet = tweets[i];
+
+        // Sentiment analysis
         let currentRes = sent.analyze(tweet.text);
+        score += currentRes.score;                 // Total score is just a sum.
+        tempComparative += currentRes.comparative; // Comparative is avg. score for the tweet.
 
-        // Total score is just a sum.
-        totalScore += currentRes.score;
+        // Min/max scores.
+        if (currentRes.score < minScore)
+        {
+          minScore = currentRes.score;
+          minScoreIdx = i;
+        }
+        if (currentRes.score > maxScore)
+        {
+          maxScore = currentRes.score;
+          maxScoreIdx = i;
+        }
 
-        // How handle this value?
-        totalComparative += currentRes.comparative;
-
-        // TODO
-        // Update highest score so far.
-        // Update lowest score so far.
+        // Check if retweet.
+        if (tweet.text.startsWith("RT @"))
+        {
+          numRetweets += 1;
+        }
       }
 
+      // Set calcs / final data if tweets were found. Otherwise, set error messages.
       if (tweets.length > 0) {
-        // Save the score and comparative average.
-        score = totalScore;
-        comparative = totalComparative / tweets.length;
+        comparative = tempComparative / tweets.length;
+        bestTweet = tweets[maxScoreIdx].text;
+        worstTweet = tweets[minScoreIdx].text;
+        numOrganicTweets = tweets.length - numRetweets;
+        oldestTweet = tweets[tweets.length-1];
+
+        // Calculate time since oldest tweet.
+        let elapsedTime = new Date() - new Date(oldestTweet.created_at);
+        if (elapsedTime > 0)
+        {
+          let days = elapsedTime / (1000 * 60 * 60 * 24);
+          elapsedTimeMsg = username + " tweeted " + tweets.length +
+                            " times in the last " + days.toFixed(2) + " days.";
+        }
       } else {
         username = "No tweets found for " + username;
         error = true;
@@ -87,18 +123,19 @@ app.post('/results', async function (req, res) {
       error = true;
     }
 
-    if (error)
-    {
-      score = 0;
-      comparative = 0;
-    }
-
     // Render the results page, passing in the data.
     res.render('results',
       {
+        client: client, // Just call `client.whateverFunction()`` in an EJS tag
+                        // to execute JS on the page.
         username: username,
         score: score,
-        comparative: comparative
+        comparative: comparative,
+        bestTweet: bestTweet,
+        worstTweet: worstTweet,
+        numOrganicTweets: numOrganicTweets,
+        numRetweets: numRetweets,
+        elapsedTimeMsg: elapsedTimeMsg
       });
   } catch (e) {
     res.end(e.message || e.toString());
