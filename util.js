@@ -3,7 +3,7 @@
 // Checks whether the given url matches the format: 'https:/twitter.com/username'
 exports.isValidProfileURL = function(url) {
    // Regex from: https://regexr.com/4tsfr
-   const globalRegex = new RegExp('(https:\/\/twitter.com\/(?![a-zA-Z0-9_]+\/)([a-zA-Z0-9_]+))', 'g');
+   const globalRegex = new RegExp('(?:https:\/\/)?(?:www\.)?twitter.com\/(?![a-zA-Z0-9_]+\/)([a-zA-Z0-9_]+)', 'g');
    return globalRegex.test(url);
 }
 

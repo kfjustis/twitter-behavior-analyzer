@@ -44,8 +44,8 @@ app.post('/results', async function (req, res) {
     let username;
     let score = 0;
     let comparative = 0;
-    let bestTweet = "";
-    let worstTweet = "";
+    let bestTweet = "none";
+    let worstTweet = "none";
     let numOrganicTweets = 0;
     let numRetweets = 0;
     let elapsedTimeMsg = "No elapsed time.";
@@ -139,10 +139,12 @@ app.post('/results', async function (req, res) {
         }
       } else {
         username = "No tweets found for " + username;
+        client.clearAllWords();
         error = true;
       }
     } else {
       username = "Invalid Twitter URL";
+      client.clearAllWords();
       error = true;
     }
 

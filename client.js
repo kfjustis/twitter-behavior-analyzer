@@ -24,3 +24,8 @@ exports.setNegativeWords = function(arr) {
    let tempStr = arr.toString();
    negativeWords = tempStr.split(",").join(" ");
 }
+
+exports.clearAllWords = function() {
+   positiveWords = "none";
+   negativeWords = "none";
+}

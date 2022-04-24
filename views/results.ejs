@@ -70,8 +70,8 @@
         let layout = d3.layout.cloud()
           .size([width, height])
           .words(wordlist.map(function(d) { return {text: d}; }))
-          .padding(5)
-          .fontSize(15)
+          .padding(25)
+          .fontSize(25)
           .on("end", draw);
 
         layout.start();
@@ -149,13 +149,13 @@
 
       <!-- Results area-->
       <main class="px-3">
-        <h1 style="padding-top: 15%;">"<%= username %>"</h1>
+        <h1 style="padding-top: 15%;"><bold>"<%= username %>"</bold></h1>
         <h3>Score: <%= score %><a href="#" style="padding-left: 5%;" data-bs-toggle="tooltip" data-bs-placement="right" title="   The score is calculated by summing the sentiment value for each tweet. Higher scores indicate more positive sentiment. Lower scores indicate more negative sentiment.">?</a></h3>
         <h3>Comparative Avg.: <%= comparative %><a href="#" style="padding-left: 5%;" data-bs-toggle="tooltip" data-bs-placement="right" title="   The comparative average is the sentiment value relative to the words in a given phrase averaged across all processed tweets. Higher comparative averages indicate higher relative positivity among tweets. Lower comparative averages indicate lower relative positivity among tweets.">?</a></h3>
         <hr>
-        <h3>Best tweet: <%= bestTweet %></h3>
+        <h3>Best tweet: <em><%= bestTweet %></em></h3>
         <hr>
-        <h3>Worst tweet: <%= worstTweet %></h3>
+        <h3>Worst tweet: <em><%= worstTweet %></em></h3>
         <hr>
         <h3>Organic Tweets: <%= numOrganicTweets %></h3>
         <h3>Retweets: <%= numRetweets %></h3>
