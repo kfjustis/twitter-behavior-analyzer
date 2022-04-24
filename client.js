@@ -15,12 +15,12 @@ exports.getNegativeWordsAsString = async () => {
 // This format is easier to send via res.send().
 exports.setPositiveWords = function(arr) {
    let tempStr = arr.toString();
-   positiveWords = tempStr.replaceAll(",", " ");
+   positiveWords = tempStr.split(",").join(" ");
 }
 
 // Takes an array of words and stores them as a space separated string.
 // This format is easier to send via res.send().
 exports.setNegativeWords = function(arr) {
    let tempStr = arr.toString();
-   negativeWords = tempStr.replaceAll(",", " ");
+   negativeWords = tempStr.split(",").join(" ");
 }

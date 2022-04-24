@@ -43,8 +43,13 @@
     <script src="https://cdn.jsdelivr.net/gh/holtzy/D3-graph-gallery@master/LIB/d3.layout.cloud.js"></script>
     <script>
       async function renderCloudVis(visId) {
-        let width = 600;
-        let height = 400;
+        let width = 500;
+        // Resize for mobile.
+        if (window.innerWidth < width)
+        {
+          width = window.innerWidth - window.innerWidth*0.2;
+        }
+        let height = 300;
         let svg = d3.select(visId).append("svg")
                     .attr("width", width)
                     .attr("height", height);
@@ -63,8 +68,8 @@
         let layout = d3.layout.cloud()
           .size([width, height])
           .words(wordlist.map(function(d) { return {text: d}; }))
-          .padding(15)
-          .fontSize(25)
+          .padding(5)
+          .fontSize(15)
           .on("end", draw);
 
         layout.start();
@@ -119,7 +124,7 @@
 
   </head>
 
-  <body class="d-flex h-100 text-center text-white bg-dark">
+  <body class="d-flex text-center text-white bg-dark">
     <!-- Page container -->
     <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
       <!-- Navbar -->
@@ -135,7 +140,7 @@
 
       <!-- Results area-->
       <main class="px-3">
-        <h1>"<%= username %>"</h1>
+        <h1 style="padding-top: 15%;">"<%= username %>"</h1>
         <h3>Score: <%= score %></h3>
         <h3>Comparative Avg.: <%= comparative %></h3>
         <hr>
