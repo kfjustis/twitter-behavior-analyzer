@@ -24,15 +24,29 @@ app.get('/', function(request, response){
 });
 
 app.get('/api/positiveUserWords', async function (req, res) {
-    let wordString = await client.getPositiveWordsAsString();
-    res.set('Content-Type', 'text/plain');
-    res.send(wordString);
+  let wordString = await client.getPositiveWordsAsString();
+  res.set('Content-Type', 'text/plain');
+  res.send(wordString);
 });
 
 app.get('/api/negativeUserWords', async function (req, res) {
-    let wordString = await client.getNegativeWordsAsString();
-    res.set('Content-Type', 'text/plain');
-    res.send(wordString);
+  let wordString = await client.getNegativeWordsAsString();
+  res.set('Content-Type', 'text/plain');
+  res.send(wordString);
+});
+
+app.get('/api/tweetHistoryAsJson', async function (req, res) {
+  let data = [];
+  data.push({"day": 5, "hour": 6, "value": 25});
+  data.push({"day": 5, "hour": 6, "value": 25});
+  data.push({"day": 5, "hour": 6, "value": 25});
+  data.push({"day": 5, "hour": 6, "value": 25});
+
+  data.push({"day": 1, "hour": 13, "value": 10});
+  data.push({"day": 1, "hour": 13, "value": 10});
+  data.push({"day": 1, "hour": 13, "value": 10});
+  data.push({"day": 1, "hour": 13, "value": 10});
+  res.json(data);
 });
 
 // Post method to handle analysis and results display.
