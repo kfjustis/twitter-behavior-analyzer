@@ -2,6 +2,7 @@
 
 let positiveWords = "none";
 let negativeWords = "none";
+let clientTweets = ["none"];
 
 exports.getPositiveWordsAsString = async () => {
    return positiveWords;
@@ -28,4 +29,19 @@ exports.setNegativeWords = function(arr) {
 exports.clearAllWords = function() {
    positiveWords = "none";
    negativeWords = "none";
+}
+
+exports.getCachedTweets = async() => {
+   return clientTweets;
+}
+
+exports.cacheTweets = function(tweets) {
+   clientTweets = JSON.parse(JSON.stringify(tweets))
+}
+
+exports.clearAllTweets = function() {
+   // Ensures other references get emptied as well if there are any.
+   while (clientTweets.length > 0) {
+      clientTweets.pop();
+   }
 }

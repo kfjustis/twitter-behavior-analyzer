@@ -36,16 +36,31 @@ app.get('/api/negativeUserWords', async function (req, res) {
 });
 
 app.get('/api/tweetHistoryAsJson', async function (req, res) {
+  let tweets = await client.getCachedTweets();
   let data = [];
-  data.push({"day": 5, "hour": 6, "value": 25});
-  data.push({"day": 5, "hour": 6, "value": 25});
-  data.push({"day": 5, "hour": 6, "value": 25});
-  data.push({"day": 5, "hour": 6, "value": 25});
+  let hashMap = {};
 
-  data.push({"day": 1, "hour": 13, "value": 10});
-  data.push({"day": 1, "hour": 13, "value": 10});
-  data.push({"day": 1, "hour": 13, "value": 10});
-  data.push({"day": 1, "hour": 13, "value": 10});
+  // Generate occurrence map for the tweet times.
+  for (i = 0; i < tweets.length; ++i) {
+    let date = new Date(tweets[i].created_at);
+    let key = String(date.getDay()+1) + "-" + String(date.getHours()+1);
+    if (hashMap[key]) {
+      hashMap[key] += 1;
+    } else {
+      hashMap[key] = 1;
+    }
+  }
+
+  // Convert the occurrence map into the heat map data format.
+  for (var _key in hashMap) {
+    let keyArr = _key.split("-");
+    let day = keyArr[0];
+    let hour = keyArr[1];
+    let value = hashMap[_key];
+    data.push({"day": parseInt(day), "hour": parseInt(hour), "value": parseInt(value)});
+  }
+
+  // Send the data.
   res.json(data);
 });
 
@@ -151,6 +166,9 @@ app.post('/results', async function (req, res) {
           elapsedTimeMsg = username + " tweeted " + tweets.length +
                             " times in the last " + days.toFixed(2) + " days.";
         }
+
+        // Cache the found tweets.
+        client.cacheTweets(tweets);
       } else {
         username = "No tweets found for " + username;
         client.clearAllWords();
@@ -160,6 +178,11 @@ app.post('/results', async function (req, res) {
       username = "Invalid Twitter URL";
       client.clearAllWords();
       error = true;
+    }
+
+    if (error) {
+      // Clear any cached tweets.
+      client.clearAllTweets();
     }
 
     // Render the results page, passing in the data.
