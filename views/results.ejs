@@ -44,6 +44,105 @@
     <!-- Load d3-cloud -->
     <script src="https://cdn.jsdelivr.net/gh/holtzy/D3-graph-gallery@master/LIB/d3.layout.cloud.js"></script>
     <script>
+      // Retrieves the positive word list for the user. The words are
+      // converted back into an array so they are easier for d3 to use.
+      async function getPositiveWordList() {
+        let words = await fetch('/api/positiveUserWords')
+          .then(function(res) {
+            return res.text();
+          }).then(function(data) {
+            return data;
+          });
+        return words.split(" ");
+      }
+
+      // Retrieves the negative word list for the user. The words are
+      // converted back into an array so they are easier for d3 to use.
+      async function getNegativeWordList() {
+        let words = await fetch('/api/negativeUserWords')
+          .then(function(res) {
+            return res.text();
+          }).then(function(data) {
+            return data;
+          });
+        return words.split(" ");
+      }
+
+      // Gets the formatted tweet data for the heat map as JSON.
+      async function getTweetHeatMapJson() {
+        let json = await fetch('/api/tweetHistoryAsJson')
+          .then(function(res) {
+            return res.json();
+          });
+        return json;
+      }
+
+      // Renders the organic vs retweet vis.
+      // source: https://d3-graph-gallery.com/graph/barplot_basic.html
+      async function renderOrganicVsRetweetVis() {
+        let numOrganicTweets = <%= numOrganicTweets %>;
+        let numRetweets = <%= numRetweets %>;
+
+        let data = [];
+        data.push({"group": "Organic", "value": numOrganicTweets});
+        data.push({"group": "Retweets", "value": numRetweets});
+
+        let margin = {top: 30, right: 0, bottom: 70, left: 30},
+            width = 460 - margin.left - margin.right,
+            height = 400 - margin.top - margin.bottom;
+        if (window.innerWidth < width)
+        {
+          width = window.innerWidth - window.innerWidth*0.2 - margin.left - margin.right;
+        }
+        let svg = d3.select("#organicVsRetweetVis")
+                    .append("svg")
+                      .attr("width", width + margin.left + margin.right)
+                      .attr("height", height + margin.top + margin.bottom)
+                    .append("g")
+                      .attr("transform",
+                            "translate(" + margin.left + "," + margin.top + ")");
+        // X axis
+        var x = d3.scaleBand()
+          .range([ 0, width ])
+          .domain(data.map(function(d) { return d.group; }))
+          .padding(0.2);
+        svg.append("g")
+          .attr("transform", "translate(0," + height + ")")
+          .call(d3.axisBottom(x))
+          .selectAll("text")
+            .attr("transform", "translate(-10,0)rotate(-45)")
+            .style("fill", "#FFFFFF")
+            .style("text-anchor", "end")
+            .attr("font-size", 15);
+
+        // Add Y axis
+        var y = d3.scaleLinear()
+          .domain([0, d3.max(data, function(d) { return d.value })])
+          .range([ height, 0]);
+        svg.append("g")
+          .call(d3.axisLeft(y))
+          .selectAll("text")
+            .style("fill", "#FFFFFF")
+            .attr("font-size", 15);
+        svg.selectAll("line")
+            .style("stroke", "white");
+        svg.selectAll("path")
+            .style("stroke", "white");
+
+        // Bars
+        svg.selectAll("mybar")
+          .data(data)
+          .enter()
+          .append("rect")
+            .attr("x", function(d) { return x(d.group); })
+            .attr("y", function(d) { return y(d.value); })
+            .attr("width", x.bandwidth())
+            .attr("height", function(d) { return height - y(d.value); })
+            .attr("fill", "#1DA1F2")
+      } // End renderOrganicVsRetweetVis()
+
+      // Renders a word cloud visualization based on the given
+      // visId.
       async function renderCloudVis(visId) {
         let width = 500;
         // Resize for mobile.
@@ -93,30 +192,6 @@
         }
       }
 
-      // Retrieves the positive word list for the user. The words are
-      // converted back into an array so they are easier for d3 to use.
-      async function getPositiveWordList() {
-        let words = await fetch('/api/positiveUserWords')
-          .then(function(res) {
-            return res.text();
-          }).then(function(data) {
-            return data;
-          });
-        return words.split(" ");
-      }
-
-      // Retrieves the negative word list for the user. The words are
-      // converted back into an array so they are easier for d3 to use.
-      async function getNegativeWordList() {
-        let words = await fetch('/api/negativeUserWords')
-          .then(function(res) {
-            return res.text();
-          }).then(function(data) {
-            return data;
-          });
-        return words.split(" ");
-      }
-
       // Renders the tweet activity heat map.
       // Supply json data in the format:
       // [{day: 1-7, hour: 1-24, value: count},...,...]
@@ -129,7 +204,6 @@
           colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
           days = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
           times = ["1a", "2a", "3a", "4a", "5a", "6a", "7a", "8a", "9a", "10a", "11a", "12p", "1p", "2p", "3p", "4p", "5p", "6p", "7p", "8p", "9p", "10p", "11p", "12a"];
-          datasets = ["data.tsv", "data2.tsv"];
 
         let width = 640 - margin.left - margin.right;
         // Resize for mobile.
@@ -235,14 +309,6 @@
         heatMapChart(jsonData);
       } // End renderHeatMap().
 
-      async function getTweetJson() {
-        let json = await fetch('/api/tweetHistoryAsJson')
-          .then(function(res) {
-            return res.json();
-          });
-        return json;
-      }
-
       // Set up the page visuals when all data is available.
       window.onload = async function() {
         // Initialize tooltips.
@@ -252,9 +318,10 @@
         })
 
         // Render visualizations.
+        renderOrganicVsRetweetVis();
         renderCloudVis("#positiveCloudVis");
         renderCloudVis("#negativeCloudVis");
-        let jsonData = await getTweetJson();
+        let jsonData = await getTweetHeatMapJson();
         renderHeatMap(jsonData);
         console.log("Page loading complete.");
       };
@@ -286,10 +353,11 @@
         <hr>
         <h3>Worst tweet: <em><%= worstTweet %></em></h3>
         <hr>
-        <h3>Organic Tweets: <%= numOrganicTweets %></h3>
-        <h3>Retweets: <%= numRetweets %></h3>
-        <hr>
         <h3><%= elapsedTimeMsg %></h3>
+        <hr>
+        <h3>Tweet Counts by Type</h3>
+        <div id="organicVsRetweetVis">
+        </div>
         <hr>
         <h3>Most positive words</h3>
         <div id="positiveCloudVis">
