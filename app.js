@@ -197,6 +197,7 @@ app.post('/results', async function (req, res) {
         worstTweet: worstTweet,
         numOrganicTweets: numOrganicTweets,
         numRetweets: numRetweets,
+        numTotalTweets: numOrganicTweets + numRetweets,
         elapsedTimeMsg: elapsedTimeMsg
       });
   } catch (e) {
